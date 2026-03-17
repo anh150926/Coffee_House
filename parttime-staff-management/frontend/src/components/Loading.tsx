@@ -6,21 +6,13 @@ interface LoadingProps {
 
 const Loading: React.FC<LoadingProps> = ({ message = 'Đang tải...' }) => {
   return (
-    <div className="d-flex flex-column justify-content-center align-items-center py-5">
-      <div className="spinner-border spinner-coffee" role="status">
+    <div className="loading-container">
+      <div className="spinner-border" role="status" style={{ color: 'var(--orange)', width: '2rem', height: '2rem' }}>
         <span className="visually-hidden">Loading...</span>
       </div>
-      <p className="mt-3 text-muted">{message}</p>
+      <p className="loading-text">{message}</p>
     </div>
   );
 };
 
 export default Loading;
-
-
-
-
-
-
-
-

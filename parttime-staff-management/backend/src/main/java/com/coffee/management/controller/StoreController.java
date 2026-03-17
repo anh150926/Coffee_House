@@ -49,7 +49,7 @@ public class StoreController {
             @Valid @RequestBody CreateStoreRequest request,
             @AuthenticationPrincipal UserPrincipal currentUser) {
         StoreResponse store = storeService.createStore(request, currentUser);
-        return ResponseEntity.ok(ApiResponse.success("Store created successfully", store));
+        return ResponseEntity.status(201).body(ApiResponse.success("Store created successfully", store));
     }
 
     @PutMapping("/{id}")
@@ -70,7 +70,7 @@ public class StoreController {
             @PathVariable Long id,
             @AuthenticationPrincipal UserPrincipal currentUser) {
         storeService.deleteStore(id, currentUser);
-        return ResponseEntity.ok(ApiResponse.success("Store deleted successfully", null));
+        return ResponseEntity.status(204).build();
     }
 }
 

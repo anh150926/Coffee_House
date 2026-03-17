@@ -17,6 +17,7 @@ export interface User {
   hourlyRate?: number;
   status: 'ACTIVE' | 'INACTIVE';
   avatarUrl?: string;
+  needPasswordChange?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -60,6 +61,36 @@ const authService = {
 
   refreshToken: async (refreshToken: string): Promise<ApiResponse<LoginResponse>> => {
     const response = await api.post<ApiResponse<LoginResponse>>('/auth/refresh', { refreshToken });
+    return response.data;
+  },
+
+  forgotPassword: async (email: string): Promise<ApiResponse<void>> => {
+    const response = await api.post<ApiResponse<void>>('/auth/forgot-password', { email });
+    return response.data;
+  },
+
+  getPasswordResetRequests: async (): Promise<ApiResponse<any[]>> => {
+    const response = await api.get<ApiResponse<any[]>>('/auth/password-reset-requests');
+    return response.data;
+  },
+
+  approvePasswordReset: async (id: number, newPassword: string): Promise<ApiResponse<void>> => {
+    const response = await api.post<ApiResponse<void>>(`/auth/password-reset-requests/${id}/approve`, { newPassword });
+    return response.data;
+  },
+
+  rejectPasswordReset: async (id: number): Promise<ApiResponse<void>> => {
+    const response = await api.post<ApiResponse<void>>(`/auth/password-reset-requests/${id}/reject`);
+    return response.data;
+  },
+
+  changePassword: async (data: any): Promise<ApiResponse<void>> => {
+    const response = await api.put<ApiResponse<void>>('/auth/change-password', data);
+    return response.data;
+  },
+
+  changeInitialPassword: async (currentPassword: string, newPassword: string): Promise<ApiResponse<void>> => {
+    const response = await api.post<ApiResponse<void>>('/auth/change-initial-password', { currentPassword, newPassword });
     return response.data;
   },
 };

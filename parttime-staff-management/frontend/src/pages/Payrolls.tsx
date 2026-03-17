@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../app/store';
-import { generatePayroll, fetchPayrollsByMonth, fetchPayrollsByStoreAndMonth, updatePayroll } from '../features/payroll/payrollSlice';
+import { generatePayroll, fetchPayrollsByMonth, fetchPayrollsByStoreAndMonth, updatePayroll, submitPayroll } from '../features/payroll/payrollSlice';
 import { fetchStores } from '../features/stores/storeSlice';
 import Loading from '../components/Loading';
 import Toast from '../components/Toast';
@@ -18,13 +18,14 @@ const Payrolls: React.FC = () => {
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
   const [selectedStoreId, setSelectedStoreId] = useState<number | ''>('');
   const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' | 'warning' | 'info' }>({ show: false, message: '', type: 'success' });
+  const [isGenerating, setIsGenerating] = useState(false);
   
   // Modal states
   const [showAdjustModal, setShowAdjustModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [selectedPayroll, setSelectedPayroll] = useState<Payroll | null>(null);
-  const [confirmAction, setConfirmAction] = useState<'approve' | 'paid' | null>(null);
+  const [confirmAction, setConfirmAction] = useState<'approve' | 'paid' | 'submit' | null>(null);
   
   // Adjustment form
   const [adjustmentAmount, setAdjustmentAmount] = useState<number>(0);
@@ -56,18 +57,28 @@ const Payrolls: React.FC = () => {
   };
 
   const handleGenerate = async () => {
+    if (isGenerating) return;
+    setIsGenerating(true);
     try {
       const storeId = isOwner ? (selectedStoreId ? Number(selectedStoreId) : undefined) : user?.storeId;
       await dispatch(generatePayroll({ month: selectedMonth, storeId })).unwrap();
       setToast({ show: true, message: 'Tính lương thành công!', type: 'success' });
     } catch (err: any) {
       setToast({ show: true, message: err || 'Có lỗi xảy ra!', type: 'error' });
+    } finally {
+      setIsGenerating(false);
     }
   };
 
   const handleApprove = (payroll: Payroll) => {
     setSelectedPayroll(payroll);
     setConfirmAction('approve');
+    setShowConfirmModal(true);
+  };
+
+  const handleSubmit = (payroll: Payroll) => {
+    setSelectedPayroll(payroll);
+    setConfirmAction('submit');
     setShowConfirmModal(true);
   };
 
@@ -81,13 +92,18 @@ const Payrolls: React.FC = () => {
     if (!selectedPayroll || !confirmAction) return;
     
     try {
-      const newStatus = confirmAction === 'approve' ? 'APPROVED' : 'PAID';
-      await dispatch(updatePayroll({ id: selectedPayroll.id, data: { status: newStatus } })).unwrap();
-      setToast({ 
-        show: true, 
-        message: confirmAction === 'approve' ? 'Đã duyệt bảng lương!' : 'Đã đánh dấu thanh toán!', 
-        type: 'success' 
-      });
+      if (confirmAction === 'submit') {
+        await dispatch(submitPayroll(selectedPayroll.id)).unwrap();
+        setToast({ show: true, message: 'Đã nộp bảng lương chờ duyệt!', type: 'success' });
+      } else {
+        const newStatus = confirmAction === 'approve' ? 'APPROVED' : 'PAID';
+        await dispatch(updatePayroll({ id: selectedPayroll.id, data: { status: newStatus } })).unwrap();
+        setToast({ 
+          show: true, 
+          message: confirmAction === 'approve' ? 'Đã duyệt bảng lương!' : 'Đã đánh dấu thanh toán!', 
+          type: 'success' 
+        });
+      }
       setShowConfirmModal(false);
       setSelectedPayroll(null);
       setConfirmAction(null);
@@ -164,6 +180,7 @@ const Payrolls: React.FC = () => {
   const getStatusBadge = (status: string) => {
     const badges: Record<string, { class: string; label: string; icon: string }> = {
       DRAFT: { class: 'bg-secondary', label: 'Bản nháp', icon: 'bi-file-earmark' },
+      SUBMITTED: { class: 'bg-info', label: 'Chờ duyệt', icon: 'bi-send' },
       APPROVED: { class: 'bg-success', label: 'Đã duyệt', icon: 'bi-check-circle' },
       PAID: { class: 'bg-primary', label: 'Đã thanh toán', icon: 'bi-cash-coin' },
     };
@@ -173,6 +190,7 @@ const Payrolls: React.FC = () => {
   const getStatusLabel = (status: string) => {
     const labels: Record<string, string> = {
       DRAFT: 'Bản nháp',
+      SUBMITTED: 'Chờ duyệt',
       APPROVED: 'Đã duyệt',
       PAID: 'Đã thanh toán',
     };
@@ -186,10 +204,11 @@ const Payrolls: React.FC = () => {
     const totalAdjustments = payrolls.reduce((sum, p) => sum + p.adjustments, 0);
     const totalHours = payrolls.reduce((sum, p) => sum + (p.userRole !== 'MANAGER' ? p.totalHours : 0), 0);
     const draftCount = payrolls.filter(p => p.status === 'DRAFT').length;
+    const submittedCount = payrolls.filter(p => p.status === 'SUBMITTED').length;
     const approvedCount = payrolls.filter(p => p.status === 'APPROVED').length;
     const paidCount = payrolls.filter(p => p.status === 'PAID').length;
     
-    return { totalGross, totalNet, totalAdjustments, totalHours, draftCount, approvedCount, paidCount };
+    return { totalGross, totalNet, totalAdjustments, totalHours, draftCount, submittedCount, approvedCount, paidCount };
   }, [payrolls]);
 
   // Kiểm tra xem có staff nào không (để quyết định hiển thị cột giờ làm và lương/giờ)
@@ -219,9 +238,12 @@ const Payrolls: React.FC = () => {
             <i className="bi bi-printer me-2"></i>
             In
           </button>
-          <button className="btn btn-coffee" onClick={handleGenerate}>
-            <i className="bi bi-calculator me-2"></i>
-            Tính lương
+          <button className="btn btn-coffee" onClick={handleGenerate} disabled={isGenerating}>
+            {isGenerating ? (
+              <><span className="spinner-border spinner-border-sm me-2"></span>Đang tính...</>
+            ) : (
+              <><i className="bi bi-calculator me-2"></i>Tính lương</>
+            )}
           </button>
         </div>
       </div>
@@ -331,6 +353,12 @@ const Payrolls: React.FC = () => {
                   <span className="badge bg-secondary fs-6 py-2 px-3">
                     <i className="bi bi-file-earmark me-1"></i>
                     {stats.draftCount} Bản nháp
+                  </span>
+                </div>
+                <div className="d-flex align-items-center gap-2">
+                  <span className="badge bg-info fs-6 py-2 px-3">
+                    <i className="bi bi-send me-1"></i>
+                    {stats.submittedCount} Chờ duyệt
                   </span>
                 </div>
                 <div className="d-flex align-items-center gap-2">
@@ -459,6 +487,15 @@ const Payrolls: React.FC = () => {
                               >
                                 <i className="bi bi-pencil"></i>
                               </button>
+                              {isManager && (
+                                <button 
+                                  className="btn btn-outline-info" 
+                                  title="Nộp bảng lương"
+                                  onClick={() => handleSubmit(payroll)}
+                                >
+                                  <i className="bi bi-send"></i>
+                                </button>
+                              )}
                               {isOwner && (
                                 <button 
                                   className="btn btn-outline-success" 
@@ -730,14 +767,16 @@ const Payrolls: React.FC = () => {
       {/* Confirm Modal */}
       <ConfirmModal
         show={showConfirmModal}
-        title={confirmAction === 'approve' ? 'Xác nhận duyệt lương' : 'Xác nhận thanh toán'}
+        title={confirmAction === 'submit' ? 'Xác nhận nộp bảng lương' : confirmAction === 'approve' ? 'Xác nhận duyệt lương' : 'Xác nhận thanh toán'}
         message={
-          confirmAction === 'approve' 
-            ? `Bạn có chắc chắn muốn duyệt bảng lương của ${selectedPayroll?.userName}? Sau khi duyệt, bạn không thể thay đổi số giờ làm và lương gốc.`
-            : `Bạn có chắc chắn muốn đánh dấu đã thanh toán cho ${selectedPayroll?.userName}?`
+          confirmAction === 'submit'
+            ? `Bạn có chắc chắn muốn nộp bảng lương của ${selectedPayroll?.userName} để chờ Owner duyệt?`
+            : confirmAction === 'approve' 
+              ? `Bạn có chắc chắn muốn duyệt bảng lương của ${selectedPayroll?.userName}? Sau khi duyệt, bạn không thể thay đổi số giờ làm và lương gốc.`
+              : `Bạn có chắc chắn muốn đánh dấu đã thanh toán cho ${selectedPayroll?.userName}?`
         }
-        confirmText={confirmAction === 'approve' ? 'Duyệt' : 'Xác nhận'}
-        confirmButtonClass={confirmAction === 'approve' ? 'btn-success' : 'btn-primary'}
+        confirmText={confirmAction === 'submit' ? 'Nộp bảng lương' : confirmAction === 'approve' ? 'Duyệt' : 'Xác nhận'}
+        confirmButtonClass={confirmAction === 'submit' ? 'btn-info' : confirmAction === 'approve' ? 'btn-success' : 'btn-primary'}
         onConfirm={confirmStatusChange}
         onCancel={() => {
           setShowConfirmModal(false);

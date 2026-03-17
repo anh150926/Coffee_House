@@ -32,6 +32,8 @@ public class PayrollResponse {
     private String adjustmentNote;
     private BigDecimal netPay;
     private PayrollStatus status;
+    private LocalDateTime submittedAt;
+    private LocalDateTime approvedAt;
     private LocalDateTime createdAt;
     
     public static PayrollResponse fromEntity(Payroll payroll) {
@@ -53,6 +55,8 @@ public class PayrollResponse {
                 .adjustmentNote(payroll.getAdjustmentNote())
                 .netPay(netPay)
                 .status(payroll.getStatus())
+                .submittedAt(payroll.getSubmittedAt())
+                .approvedAt(payroll.getApprovedAt())
                 .createdAt(payroll.getCreatedAt())
                 .build();
     }

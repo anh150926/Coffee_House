@@ -4,6 +4,9 @@ import { RootState } from '../app/store';
 import reportService, { SystemReport } from '../api/reportService';
 import Loading from '../components/Loading';
 import { formatCurrency, getCurrentMonth, formatMonth } from '../utils/formatters';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+
+const COLORS = ['#FD7E14', '#3B82F6', '#28A745', '#F59E0B', '#EF4444', '#8B4513', '#6f4e37', '#15803d'];
 
 const Reports: React.FC = () => {
   const { user } = useSelector((state: RootState) => state.auth);
@@ -294,6 +297,120 @@ const Reports: React.FC = () => {
                     <div className="stat-icon-wrapper">
                       <i className="bi bi-exclamation-triangle stat-icon"></i>
                     </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Charts Section */}
+          <div className="row g-4 mb-4">
+            {/* Chart 1: Tasks */}
+            <div className="col-lg-6">
+              <div className="card card-coffee shadow-sm border-0 h-100">
+                <div className="card-header bg-white border-0 pt-4 pb-0">
+                  <h6 className="fw-bold mb-0 text-primary">
+                    <i className="bi bi-bar-chart-steps me-2"></i>
+                    Thống kê nhiệm vụ theo cơ sở
+                  </h6>
+                </div>
+                <div className="card-body">
+                  <div style={{ height: '300px' }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={report.storeReports.map(s => ({
+                          name: s.storeName,
+                          "Hoàn thành": s.completedTasks,
+                          "Chờ/Đang làm": s.pendingTasks + s.inProgressTasks,
+                          "Quá hạn": s.overdueTasks
+                        }))}
+                        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
+                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} />
+                        <RechartsTooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }} />
+                        <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                        <Bar dataKey="Hoàn thành" stackId="a" fill="#28A745" radius={[0, 0, 0, 0]} />
+                        <Bar dataKey="Chờ/Đang làm" stackId="a" fill="#3B82F6" />
+                        <Bar dataKey="Quá hạn" stackId="a" fill="#EF4444" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Chart 2: Payroll */}
+            <div className="col-lg-6">
+              <div className="card card-coffee shadow-sm border-0 h-100">
+                <div className="card-header bg-white border-0 pt-4 pb-0">
+                  <h6 className="fw-bold mb-0 text-primary">
+                    <i className="bi bi-pie-chart-fill me-2"></i>
+                    Tỷ trọng chi phí lương theo cơ sở
+                  </h6>
+                </div>
+                <div className="card-body">
+                  <div style={{ height: '300px' }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={report.storeReports.map(s => ({
+                            name: s.storeName,
+                            value: s.totalPayroll
+                          }))}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          outerRadius={100}
+                          fill="#8884d8"
+                          dataKey="value"
+                          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        >
+                          {report.storeReports.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <RechartsTooltip formatter={(value: number) => formatCurrency(value)} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }} />
+                        <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Chart 3: Hours Worked */}
+            <div className="col-12">
+              <div className="card card-coffee shadow-sm border-0">
+                <div className="card-header bg-white border-0 pt-4 pb-0">
+                  <h6 className="fw-bold mb-0 text-primary">
+                    <i className="bi bi-clock-history me-2"></i>
+                    Tổng số giờ làm việc theo cơ sở
+                  </h6>
+                </div>
+                <div className="card-body">
+                  <div style={{ height: '300px' }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={report.storeReports.map(s => ({
+                          name: s.storeName,
+                          "Giờ làm": s.totalHoursWorked
+                        }))}
+                        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                        barSize={40}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
+                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} />
+                        <RechartsTooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }} cursor={{ fill: '#f3f4f6' }} />
+                        <Bar dataKey="Giờ làm" fill="#FD7E14" radius={[6, 6, 0, 0]}>
+                          {report.storeReports.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
                   </div>
                 </div>
               </div>

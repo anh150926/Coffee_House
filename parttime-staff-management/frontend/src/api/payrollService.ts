@@ -16,14 +16,16 @@ export interface Payroll {
   adjustments: number;
   adjustmentNote?: string;
   netPay: number;
-  status: 'DRAFT' | 'APPROVED' | 'PAID';
+  status: 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'PAID';
+  submittedAt?: string;
+  approvedAt?: string;
   createdAt: string;
 }
 
 export interface UpdatePayrollRequest {
   adjustments?: number;
   adjustmentNote?: string;
-  status?: 'DRAFT' | 'APPROVED' | 'PAID';
+  status?: 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'PAID';
 }
 
 const payrollService = {
@@ -52,6 +54,11 @@ const payrollService = {
 
   update: async (id: number, data: UpdatePayrollRequest): Promise<ApiResponse<Payroll>> => {
     const response = await api.put<ApiResponse<Payroll>>(`/payrolls/${id}`, data);
+    return response.data;
+  },
+
+  submit: async (id: number): Promise<ApiResponse<Payroll>> => {
+    const response = await api.post<ApiResponse<Payroll>>(`/payrolls/${id}/submit`);
     return response.data;
   },
 

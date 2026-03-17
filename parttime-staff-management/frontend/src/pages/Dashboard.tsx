@@ -300,90 +300,92 @@ const Dashboard: React.FC = () => {
 
   return (
     <div>
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      {/* Page header */}
+      <div className="d-flex justify-content-between align-items-start mb-4">
         <div>
-          <h2 className="mb-1">Xin chào, {user?.fullName}!</h2>
-          <p className="text-muted mb-0">
-            {isOwner && 'Tổng quan hệ thống chuỗi cà phê'}
-            {isManager && `Quản lý ${user?.storeName}`}
-            {isStaff && 'Bảng điều khiển nhân viên'}
+          <h2 className="page-title">
+            {isOwner && 'Tổng quan hệ thống'}
+            {isManager && 'Bảng điều hành'}
+            {isStaff && 'Bảng điều hành'}
+          </h2>
+          <p className="page-subtitle">
+            {isOwner && `Xin chào ${user?.fullName} – Quản trị chuỗi cà phê`}
+            {isManager && `${new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} • Cơ sở: ${user?.storeName}`}
+            {isStaff && `Xin chào, ${user?.fullName}!`}
           </p>
         </div>
-        
+
         {(isOwner || isManager) && (
-          <div className="month-selector-container">
-            <select
-              className="form-select month-selector"
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
-            >
-              <option value={getCurrentMonth()}>Tháng này</option>
-              {/* Add previous months */}
-              {Array.from({ length: 5 }, (_, i) => {
-                const date = new Date();
-                date.setMonth(date.getMonth() - (i + 1));
-                const month = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-                return (
-                  <option key={month} value={month}>
-                    {formatMonth(month)}
-                  </option>
-                );
-              })}
-            </select>
-            <i className="bi bi-chevron-down month-selector-arrow"></i>
+          <div className="d-flex align-items-center gap-2">
+            <div className="month-selector-container">
+              <select
+                className="form-select month-selector"
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+              >
+                <option value={getCurrentMonth()}>Tháng này</option>
+                {Array.from({ length: 5 }, (_, i) => {
+                  const date = new Date();
+                  date.setMonth(date.getMonth() - (i + 1));
+                  const month = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                  return (
+                    <option key={month} value={month}>
+                      {formatMonth(month)}
+                    </option>
+                  );
+                })}
+              </select>
+              <i className="bi bi-chevron-down month-selector-arrow" />
+            </div>
           </div>
         )}
       </div>
 
-      {/* Stats Cards - Owner */}
+      {/* Stats Cards - Owner – BeanTrust style */}
       {isOwner && (
-        <div className="row g-4 mb-4">
+        <div className="row g-3 mb-4">
           <div className="col-md-6 col-lg-3">
-            <div className="stat-card primary">
-              <div className="d-flex justify-content-between align-items-start">
-                <div>
-                  <div className="stat-value">{stores.length}</div>
-                  <div className="stat-label">Cơ sở</div>
-                </div>
-                <i className="bi bi-shop stat-icon"></i>
+            <div className="stat-card">
+              <div className="stat-card-label">
+                Cơ sở
+                <span className="stat-badge up"><i className="bi bi-arrow-up" />{stores.length}</span>
               </div>
+              <div className="stat-card-value">{stores.length}</div>
+              <div className="stat-card-sub">Chi nhánh đang hoạt động</div>
             </div>
           </div>
           <div className="col-md-6 col-lg-3">
-            <div className="stat-card success">
-              <div className="d-flex justify-content-between align-items-start">
-                <div>
-                  <div className="stat-value">{activeStaffCount}/{staffCount}</div>
-                  <div className="stat-label">Nhân viên</div>
-                </div>
-                <i className="bi bi-people stat-icon"></i>
+            <div className="stat-card">
+              <div className="stat-card-label">
+                Nhân viên
+                <span className="stat-badge up"><i className="bi bi-people" />{activeStaffCount}</span>
               </div>
+              <div className="stat-card-value">{activeStaffCount}<span style={{ fontSize: '1rem', color: 'var(--text-light)', fontWeight: 400 }}>/{staffCount}</span></div>
+              <div className="stat-card-sub">Nhân viên đang hoạt động</div>
             </div>
           </div>
           <div className="col-md-6 col-lg-3">
-            <div className="stat-card warning">
-              <div className="d-flex justify-content-between align-items-start">
-                <div>
-                  <div className="stat-value">{pendingCount}</div>
-                  <div className="stat-label">Yêu cầu chờ duyệt</div>
-                </div>
-                <i className="bi bi-file-earmark-text stat-icon"></i>
+            <div className="stat-card">
+              <div className="stat-card-label">
+                Yêu cầu chờ duyệt
+                {pendingCount > 0 && <span className="stat-badge down"><i className="bi bi-clock" />{pendingCount}</span>}
               </div>
+              <div className="stat-card-value">{pendingCount}</div>
+              <div className="stat-card-sub">Cần xử lý</div>
             </div>
           </div>
           <div className="col-md-6 col-lg-3">
-            <div className="stat-card danger">
-              <div className="d-flex justify-content-between align-items-start">
-                <div>
-                  <div className="stat-value">
-                    {report && 'totalPayroll' in report
-                      ? formatCurrency(report.totalPayroll)
-                      : '---'}
-                  </div>
-                  <div className="stat-label">Tổng lương tháng</div>
-                </div>
-                <i className="bi bi-cash-stack stat-icon"></i>
+            <div className="stat-card">
+              <div className="stat-card-label">
+                Tổng lương tháng
+                <span className="stat-badge up"><i className="bi bi-cash" /></span>
               </div>
+              <div className="stat-card-value" style={{ fontSize: '1.5rem' }}>
+                {report && 'totalPayroll' in report
+                  ? formatCurrency(report.totalPayroll)
+                  : '---'}
+              </div>
+              <div className="stat-card-sub">{formatMonth(selectedMonth)}</div>
             </div>
           </div>
         </div>
@@ -391,59 +393,54 @@ const Dashboard: React.FC = () => {
 
       {/* Stats Cards - Manager */}
       {isManager && (
-        <div className="row g-4 mb-4">
+        <div className="row g-3 mb-4">
           <div className="col-md-6 col-lg-3">
-            <div className="stat-card primary">
-              <div className="d-flex justify-content-between align-items-start">
-                <div>
-                  <div className="stat-value">{users.length}</div>
-                  <div className="stat-label">Nhân viên</div>
-                </div>
-                <i className="bi bi-people stat-icon"></i>
+            <div className="stat-card">
+              <div className="stat-card-label">
+                Nhân viên
+                <span className="stat-badge up"><i className="bi bi-people" /></span>
               </div>
+              <div className="stat-card-value">{users.length}</div>
+              <div className="stat-card-sub">Trong cơ sở của bạn</div>
             </div>
           </div>
           <div className="col-md-6 col-lg-3">
-            <div className="stat-card success">
-              <div className="d-flex justify-content-between align-items-start">
-                <div>
-                  <div className="stat-value">
-                    {report && 'totalShifts' in report ? report.totalShifts : 0}
-                  </div>
-                  <div className="stat-label">Ca làm việc</div>
-                </div>
-                <i className="bi bi-calendar3 stat-icon"></i>
+            <div className="stat-card">
+              <div className="stat-card-label">
+                Ca làm việc
+                <span className="stat-badge up"><i className="bi bi-calendar" /></span>
               </div>
+              <div className="stat-card-value">
+                {report && 'totalShifts' in report ? report.totalShifts : 0}
+              </div>
+              <div className="stat-card-sub">{formatMonth(selectedMonth)}</div>
             </div>
           </div>
           <div className="col-md-6 col-lg-3">
-            <div className="stat-card warning">
-              <div className="d-flex justify-content-between align-items-start">
-                <div>
-                  <div className="stat-value">{pendingCount}</div>
-                  <div className="stat-label">Yêu cầu chờ duyệt</div>
-                </div>
-                <i className="bi bi-file-earmark-text stat-icon"></i>
+            <div className="stat-card">
+              <div className="stat-card-label">
+                Yêu cầu chờ duyệt
+                {pendingCount > 0 && <span className="stat-badge down">{pendingCount}</span>}
               </div>
+              <div className="stat-card-value">{pendingCount}</div>
+              <div className="stat-card-sub">Cần xử lý</div>
             </div>
           </div>
           <div className="col-md-6 col-lg-3">
-            <div className="stat-card danger">
-              <div className="d-flex justify-content-between align-items-start">
-                <div>
-                  <div className="stat-value">
-                    {report && 'totalHoursWorked' in report
-                      ? `${report.totalHoursWorked}h`
-                      : '---'}
-                  </div>
-                  <div className="stat-label">Tổng giờ làm</div>
-                </div>
-                <i className="bi bi-clock stat-icon"></i>
+            <div className="stat-card">
+              <div className="stat-card-label">
+                Tổng giờ làm
+                <span className="stat-badge up"><i className="bi bi-clock" /></span>
               </div>
+              <div className="stat-card-value">
+                {report && 'totalHoursWorked' in report ? `${report.totalHoursWorked}h` : '---'}
+              </div>
+              <div className="stat-card-sub">{formatMonth(selectedMonth)}</div>
             </div>
           </div>
         </div>
       )}
+
 
       {/* Quick Actions + Chấm công (cho Staff) */}
       <div className="row g-4 mb-4">
@@ -716,49 +713,49 @@ const Dashboard: React.FC = () => {
       {isStaff && (
         <>
           {/* Staff Stats */}
-          <div className="row g-4 mb-4">
+          <div className="row g-3 mb-4">
             <div className="col-6 col-lg-3">
-              <div className="stat-card primary">
-                <div className="d-flex justify-content-between align-items-start">
-                  <div>
-                    <div className="stat-value">{weeklyConfirmedShifts.length}</div>
-                    <div className="stat-label">Ca tuần này</div>
-                  </div>
-                  <i className="bi bi-calendar-check stat-icon"></i>
+              <div className="stat-card">
+                <div className="stat-card-label">
+                  Ca tuần này
+                  <span className="stat-badge up"><i className="bi bi-calendar-check" /></span>
                 </div>
+                <div className="stat-card-value">{weeklyConfirmedShifts.length}</div>
+                <div className="stat-card-sub">Ca đã xác nhận</div>
               </div>
             </div>
             <div className="col-6 col-lg-3">
-              <div className="stat-card success">
-                <div className="d-flex justify-content-between align-items-start">
-                  <div>
-                    <div className="stat-value">{myTasks.filter(t => t.status !== 'COMPLETED').length}</div>
-                    <div className="stat-label">Nhiệm vụ</div>
-                  </div>
-                  <i className="bi bi-list-check stat-icon"></i>
+              <div className="stat-card">
+                <div className="stat-card-label">
+                  Nhiệm vụ
+                  {myTasks.filter(t => t.status !== 'COMPLETED').length > 0 && (
+                    <span className="stat-badge down">{myTasks.filter(t => t.status !== 'COMPLETED').length}</span>
+                  )}
                 </div>
+                <div className="stat-card-value">{myTasks.filter(t => t.status !== 'COMPLETED').length}</div>
+                <div className="stat-card-sub">Chưa hoàn thành</div>
               </div>
             </div>
             <div className="col-6 col-lg-3">
-              <div className="stat-card warning">
-                <div className="d-flex justify-content-between align-items-start">
-                  <div>
-                    <div className="stat-value">{listings.filter(l => l.status === 'PENDING').length}</div>
-                    <div className="stat-label">Ca đang nhường</div>
-                  </div>
-                  <i className="bi bi-shop-window stat-icon"></i>
+              <div className="stat-card">
+                <div className="stat-card-label">
+                  Ca đang nhường
+                  <span className="stat-badge up"><i className="bi bi-arrow-left-right" /></span>
                 </div>
+                <div className="stat-card-value">{listings.filter(l => l.status === 'PENDING').length}</div>
+                <div className="stat-card-sub">Trên chợ ca</div>
               </div>
             </div>
             <div className="col-6 col-lg-3">
-              <div className="stat-card danger">
-                <div className="d-flex justify-content-between align-items-start">
-                  <div>
-                    <div className="stat-value">{pendingPeerSwaps.length}</div>
-                    <div className="stat-label">Đổi ca chờ</div>
-                  </div>
-                  <i className="bi bi-arrow-left-right stat-icon"></i>
+              <div className="stat-card">
+                <div className="stat-card-label">
+                  Đổi ca chờ
+                  {pendingPeerSwaps.length > 0 && (
+                    <span className="stat-badge down">{pendingPeerSwaps.length}</span>
+                  )}
                 </div>
+                <div className="stat-card-value">{pendingPeerSwaps.length}</div>
+                <div className="stat-card-sub">Yêu cầu đang chờ</div>
               </div>
             </div>
           </div>
@@ -873,54 +870,55 @@ const Dashboard: React.FC = () => {
 
             {/* Personal Info */}
             <div className="col-md-6">
-              <div className="card card-coffee h-100 employee-info-card">
-                <div className="card-header employee-info-header">
-                  <i className="bi bi-person-badge me-2"></i>
+              <div className="card card-coffee h-100">
+                <div className="card-header">
+                  <i className="bi bi-person-badge" />
                   Thông tin nhân viên
                 </div>
-                <div className="card-body employee-info-body">
-                  <div className="employee-info-avatar-section">
+                <div className="card-body">
+                  <div className="d-flex align-items-center gap-3 mb-3">
                     {user?.avatarUrl ? (
-                      <img 
-                        src={user.avatarUrl} 
+                      <img
+                        src={user.avatarUrl}
                         alt={user.fullName}
-                        className="employee-info-avatar"
+                        style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--border)' }}
                       />
                     ) : (
-                      <div className="employee-info-avatar employee-info-avatar-placeholder">
+                      <div className="avatar-placeholder" style={{ width: 52, height: 52, fontSize: '1.2rem' }}>
                         {user?.fullName.charAt(0).toUpperCase()}
                       </div>
                     )}
-                    <div className="employee-info-name-section">
-                      <h5 className="employee-info-name mb-1">{user?.fullName}</h5>
+                    <div>
+                      <h6 style={{ fontWeight: 700, marginBottom: '0.25rem', color: 'var(--text-primary)' }}>{user?.fullName}</h6>
                       <span className={`badge ${user?.role === 'OWNER' ? 'badge-owner' : user?.role === 'MANAGER' ? 'badge-manager' : 'badge-staff'}`}>
                         {user?.role === 'OWNER' ? 'Chủ sở hữu' : user?.role === 'MANAGER' ? 'Quản lý' : 'Nhân viên'}
                       </span>
                     </div>
                   </div>
-                  <div className="employee-info-divider"></div>
-                  <table className="table table-borderless mb-0 employee-info-table">
-                    <tbody>
-                      <tr>
-                        <td className="text-muted" width="40%">
-                          <i className="bi bi-envelope me-2"></i>Email:
-                        </td>
-                        <td><strong>{user?.email}</strong></td>
-                      </tr>
-                      <tr>
-                        <td className="text-muted">
-                          <i className="bi bi-shop me-2"></i>Cơ sở:
-                        </td>
-                        <td><strong>{user?.storeName || '---'}</strong></td>
-                      </tr>
-                      <tr>
-                        <td className="text-muted">
-                          <i className="bi bi-cash-coin me-2"></i>Lương/giờ:
-                        </td>
-                        <td><strong className="text-success">{user?.hourlyRate ? formatCurrency(user.hourlyRate) : '---'}</strong></td>
-                      </tr>
-                    </tbody>
-                  </table>
+                  <div style={{ borderTop: '1px solid var(--border-light)', paddingTop: '0.875rem' }}>
+                    <table className="table table-borderless mb-0" style={{ fontSize: '0.85rem' }}>
+                      <tbody>
+                        <tr>
+                          <td className="text-muted" width="40%" style={{ padding: '0.4rem 0' }}>
+                            <i className="bi bi-envelope me-2" />Email:
+                          </td>
+                          <td style={{ padding: '0.4rem 0' }}><strong>{user?.email}</strong></td>
+                        </tr>
+                        <tr>
+                          <td className="text-muted" style={{ padding: '0.4rem 0' }}>
+                            <i className="bi bi-shop me-2" />Cơ sở:
+                          </td>
+                          <td style={{ padding: '0.4rem 0' }}><strong>{user?.storeName || '---'}</strong></td>
+                        </tr>
+                        <tr>
+                          <td className="text-muted" style={{ padding: '0.4rem 0' }}>
+                            <i className="bi bi-cash-coin me-2" />Lương/giờ:
+                          </td>
+                          <td style={{ padding: '0.4rem 0' }}><strong className="text-success">{user?.hourlyRate ? formatCurrency(user.hourlyRate) : '---'}</strong></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             </div>

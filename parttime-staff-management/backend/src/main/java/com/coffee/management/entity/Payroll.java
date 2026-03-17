@@ -50,6 +50,18 @@ public class Payroll {
     @Builder.Default
     private PayrollStatus status = PayrollStatus.DRAFT;
 
+    @Column(name = "submitted_at")
+    private LocalDateTime submittedAt;
+
+    @Column(name = "submitted_by")
+    private Long submittedBy;
+
+    @Column(name = "approved_at")
+    private LocalDateTime approvedAt;
+
+    @Column(name = "approved_by")
+    private Long approvedBy;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -85,6 +97,38 @@ public class Payroll {
 
     public PayrollStatus getStatus() {
         return status;
+    }
+
+    public LocalDateTime getSubmittedAt() {
+        return submittedAt;
+    }
+
+    public void setSubmittedAt(LocalDateTime submittedAt) {
+        this.submittedAt = submittedAt;
+    }
+
+    public Long getSubmittedBy() {
+        return submittedBy;
+    }
+
+    public void setSubmittedBy(Long submittedBy) {
+        this.submittedBy = submittedBy;
+    }
+
+    public LocalDateTime getApprovedAt() {
+        return approvedAt;
+    }
+
+    public void setApprovedAt(LocalDateTime approvedAt) {
+        this.approvedAt = approvedAt;
+    }
+
+    public Long getApprovedBy() {
+        return approvedBy;
+    }
+
+    public void setApprovedBy(Long approvedBy) {
+        this.approvedBy = approvedBy;
     }
 
     public LocalDateTime getCreatedAt() {

@@ -96,6 +96,16 @@ public class PayrollController {
         return ResponseEntity.ok(ApiResponse.success("Payroll updated successfully", payroll));
     }
 
+    @PostMapping("/{id}/submit")
+    @PreAuthorize("hasAnyRole('MANAGER', 'STAFF')")
+    @Operation(summary = "Submit payroll for approval")
+    public ResponseEntity<ApiResponse<PayrollResponse>> submitPayroll(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserPrincipal currentUser) {
+        PayrollResponse payroll = payrollService.submitPayroll(id, currentUser);
+        return ResponseEntity.ok(ApiResponse.success("Payroll submitted successfully", payroll));
+    }
+
     @PostMapping("/batch-approve")
     @PreAuthorize("hasRole('OWNER')")
     @Operation(summary = "Batch approve payrolls")

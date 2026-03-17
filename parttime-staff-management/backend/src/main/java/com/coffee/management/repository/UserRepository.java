@@ -30,13 +30,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     List<User> findByStatus(UserStatus status);
 
-    @Query("SELECT u FROM User u WHERE u.store.id = :storeId AND u.status = 'ACTIVE'")
+    @Query("SELECT u FROM User u WHERE u.store.id = :storeId AND u.status = com.coffee.management.entity.UserStatus.ACTIVE")
     List<User> findActiveStaffByStore(@Param("storeId") Long storeId);
 
     @Query("SELECT COUNT(u) FROM User u WHERE u.role = :role")
     long countByRole(@Param("role") Role role);
 
-    @Query("SELECT COUNT(u) FROM User u WHERE u.store.id = :storeId AND u.role = 'STAFF'")
+    @Query("SELECT COUNT(u) FROM User u WHERE u.store.id = :storeId AND u.role = com.coffee.management.entity.Role.STAFF")
     long countStaffByStore(@Param("storeId") Long storeId);
 
     // For broadcast notifications
@@ -47,9 +47,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findByStatusAndRoleNot(@Param("status") UserStatus status, @Param("role") Role role);
 
     // For employee ranking
-    @Query("SELECT u FROM User u WHERE u.role = 'STAFF' AND u.status = 'ACTIVE' ORDER BY u.fullName")
+    @Query("SELECT u FROM User u WHERE u.role = com.coffee.management.entity.Role.STAFF AND u.status = com.coffee.management.entity.UserStatus.ACTIVE ORDER BY u.fullName")
     List<User> findAllActiveStaff();
 
-    @Query("SELECT u FROM User u WHERE u.store.id = :storeId AND u.role = 'STAFF' AND u.status = 'ACTIVE'")
+    @Query("SELECT u FROM User u WHERE u.store.id = :storeId AND u.role = com.coffee.management.entity.Role.STAFF AND u.status = com.coffee.management.entity.UserStatus.ACTIVE")
     List<User> findActiveStaffByStoreId(@Param("storeId") Long storeId);
 }

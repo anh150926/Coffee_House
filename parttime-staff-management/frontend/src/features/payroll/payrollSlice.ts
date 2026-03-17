@@ -65,6 +65,18 @@ export const updatePayroll = createAsyncThunk(
   }
 );
 
+export const submitPayroll = createAsyncThunk(
+  'payroll/submit',
+  async (id: number, { rejectWithValue }) => {
+    try {
+      const response = await payrollService.submit(id);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to submit payroll');
+    }
+  }
+);
+
 export const fetchMyPayrollHistory = createAsyncThunk(
   'payroll/fetchMyHistory',
   async (_, { rejectWithValue }) => {
@@ -168,6 +180,21 @@ const payrollSlice = createSlice({
         }
       })
       .addCase(updatePayroll.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // Submit payroll
+      .addCase(submitPayroll.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(submitPayroll.fulfilled, (state, action) => {
+        state.loading = false;
+        const index = state.payrolls.findIndex((p) => p.id === action.payload.id);
+        if (index !== -1) {
+          state.payrolls[index] = action.payload;
+        }
+      })
+      .addCase(submitPayroll.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })

@@ -5,6 +5,7 @@ import { setUser } from '../features/auth/authSlice';
 import userService from '../api/userService';
 import Toast from '../components/Toast';
 import { formatCurrency, formatDateTime } from '../utils/formatters';
+import ProfileTabs from '../components/ProfileTabs';
 
 const Profile: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -147,11 +148,9 @@ const Profile: React.FC = () => {
   if (!user) return null;
 
   return (
-    <div>
-      <h2 className="mb-4">Hồ sơ cá nhân</h2>
-
+    <ProfileTabs>
       <div className="row">
-        <div className="col-md-4 mb-4">
+        <div className="col-xl-4 mb-4">
           <div className="card card-coffee text-center">
             <div className="card-body py-5">
               {/* Hidden file input */}
@@ -281,7 +280,7 @@ const Profile: React.FC = () => {
           </div>
         </div>
 
-        <div className="col-md-8">
+        <div className="col-xl-8">
           <div className="card card-coffee">
             <div className="card-header d-flex justify-content-between align-items-center">
               <span>
@@ -351,7 +350,7 @@ const Profile: React.FC = () => {
       </div>
 
       <Toast show={toast.show} message={toast.message} type={toast.type} onClose={() => setToast({ ...toast, show: false })} />
-    </div>
+    </ProfileTabs>
   );
 };
 

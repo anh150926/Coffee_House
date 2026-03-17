@@ -54,6 +54,19 @@ export const getCurrentUser = createAsyncThunk(
   }
 );
 
+export const updatePassword = createAsyncThunk(
+  'auth/updatePassword',
+  async (data: any, { rejectWithValue }) => {
+    try {
+      const response = await authService.changePassword(data);
+      return response.data;
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Failed to update password';
+      return rejectWithValue(message);
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -64,6 +77,12 @@ const authSlice = createSlice({
     setUser: (state, action: PayloadAction<User>) => {
       state.user = action.payload;
       localStorage.setItem('user', JSON.stringify(action.payload));
+    },
+    setNeedPasswordChange: (state, action: PayloadAction<boolean>) => {
+      if (state.user) {
+        state.user.needPasswordChange = action.payload;
+        localStorage.setItem('user', JSON.stringify(state.user));
+      }
     },
   },
   extraReducers: (builder) => {
@@ -90,11 +109,23 @@ const authSlice = createSlice({
       // Get current user
       .addCase(getCurrentUser.fulfilled, (state, action) => {
         state.user = action.payload;
+      })
+      // Update Password
+      .addCase(updatePassword.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updatePassword.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(updatePassword.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
       });
   },
 });
 
-export const { clearError, setUser } = authSlice.actions;
+export const { clearError, setUser, setNeedPasswordChange } = authSlice.actions;
 export default authSlice.reducer;
 
 

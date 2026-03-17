@@ -339,8 +339,34 @@ public class PayrollService {
     }
 
     /**
-     * Batch approve payrolls
+     * Submit payroll for approval (for managers/staff)
      */
+    public PayrollResponse submitPayroll(Long id, UserPrincipal currentUser) {
+        Payroll payroll = payrollRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Payroll", "id", id));
+        
+        if (payroll.getStatus() != PayrollStatus.DRAFT) {
+            throw new IllegalArgumentException("Only DRAFT payrolls can be submitted");
+        }
+        
+        if (!currentUser.getRole().equals("OWNER") && !currentUser.getRole().equals("MANAGER")) {
+            if (!currentUser.getId().equals(payroll.getUser().getId())) {
+                 throw new ForbiddenException("You can only submit your own payroll");
+            }
+        }
+        
+        payroll.setStatus(PayrollStatus.SUBMITTED);
+        payroll.setSubmittedAt(LocalDateTime.now());
+        payroll.setSubmittedBy(currentUser.getId());
+        
+        Payroll updated = payrollRepository.save(payroll);
+        
+        auditService.log(currentUser.getId(), "SUBMIT", "PAYROLL", id,
+                "Submitted payroll for user: " + payroll.getUser().getUsername() + " - " + payroll.getMonth());
+                
+        return PayrollResponse.fromEntity(updated);
+    }
+
     public List<PayrollResponse> batchApprovePayrolls(List<Long> ids, UserPrincipal currentUser) {
         if (!currentUser.getRole().equals("OWNER")) {
             throw new ForbiddenException("Only owner can approve payrolls");
@@ -349,8 +375,10 @@ public class PayrollService {
         List<PayrollResponse> results = new ArrayList<>();
         for (Long id : ids) {
             Payroll payroll = payrollRepository.findById(id).orElse(null);
-            if (payroll != null && payroll.getStatus() == PayrollStatus.DRAFT) {
+            if (payroll != null && (payroll.getStatus() == PayrollStatus.DRAFT || payroll.getStatus() == PayrollStatus.SUBMITTED)) {
                 payroll.setStatus(PayrollStatus.APPROVED);
+                payroll.setApprovedAt(LocalDateTime.now());
+                payroll.setApprovedBy(currentUser.getId());
                 payrollRepository.save(payroll);
                 auditService.log(currentUser.getId(), "APPROVE", "PAYROLL", id,
                         "Batch approved payroll for user: " + payroll.getUser().getUsername() + " - " + payroll.getMonth());

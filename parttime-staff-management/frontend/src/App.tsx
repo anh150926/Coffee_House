@@ -23,6 +23,10 @@ import Complaints from "./pages/Complaints";
 import EmployeeRanking from "./pages/EmployeeRanking";
 import ShiftRegistration from "./pages/ShiftRegistration";
 import WorkSchedule from "./pages/WorkSchedule";
+import PasswordResetRequests from "./pages/PasswordResetRequests";
+import Security from "./pages/Security";
+
+import NotificationsSettings from "./pages/NotificationsSettings";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
 const App: React.FC = () => {
@@ -59,6 +63,10 @@ const App: React.FC = () => {
           <Route path="/complaints" element={<Complaints />} />
           <Route path="/rankings" element={<EmployeeRanking />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/security" element={<Security />} />
+
+          <Route path="/notifications-settings" element={<NotificationsSettings />} />
+          <Route path="/password-reset-requests" element={<PasswordResetRequests />} />
         </Route>
       </Route>
 

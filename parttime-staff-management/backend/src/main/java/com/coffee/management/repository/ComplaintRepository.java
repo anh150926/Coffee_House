@@ -22,11 +22,11 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
     List<Complaint> findByStoreIdAndStatusOrderByCreatedAtDesc(Long storeId, ComplaintStatus status);
 
     // Find pending complaints for a store
-    @Query("SELECT c FROM Complaint c WHERE c.store.id = :storeId AND c.status IN ('PENDING', 'IN_PROGRESS') ORDER BY c.createdAt DESC")
+    @Query("SELECT c FROM Complaint c WHERE c.store.id = :storeId AND c.status IN (com.coffee.management.entity.ComplaintStatus.PENDING, com.coffee.management.entity.ComplaintStatus.IN_PROGRESS) ORDER BY c.createdAt DESC")
     List<Complaint> findPendingByStore(@Param("storeId") Long storeId);
 
     // Count pending complaints
-    @Query("SELECT COUNT(c) FROM Complaint c WHERE c.store.id = :storeId AND c.status = 'PENDING'")
+    @Query("SELECT COUNT(c) FROM Complaint c WHERE c.store.id = :storeId AND c.status = com.coffee.management.entity.ComplaintStatus.PENDING")
     long countPendingByStore(@Param("storeId") Long storeId);
 
     // Find all complaints (for Owner)
@@ -34,12 +34,12 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
     List<Complaint> findAllOrderByCreatedAtDesc();
 
     // Find pending complaints (for Owner)
-    @Query("SELECT c FROM Complaint c WHERE c.status IN ('PENDING', 'IN_PROGRESS') ORDER BY c.createdAt DESC")
+    @Query("SELECT c FROM Complaint c WHERE c.status IN (com.coffee.management.entity.ComplaintStatus.PENDING, com.coffee.management.entity.ComplaintStatus.IN_PROGRESS) ORDER BY c.createdAt DESC")
     List<Complaint> findAllPending();
 
     // Find resolved complaints against a user within a date range (for payroll deductions)
     @Query("SELECT c FROM Complaint c WHERE c.toUser.id = :userId " +
-           "AND c.status = 'RESOLVED' " +
+           "AND c.status = com.coffee.management.entity.ComplaintStatus.RESOLVED " +
            "AND c.createdAt >= :startDate " +
            "AND c.createdAt <= :endDate")
     List<Complaint> findResolvedComplaintsAgainstUser(
@@ -49,7 +49,7 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
 
     // Count resolved complaints against a user within a date range
     @Query("SELECT COUNT(c) FROM Complaint c WHERE c.toUser.id = :userId " +
-           "AND c.status = 'RESOLVED' " +
+           "AND c.status = com.coffee.management.entity.ComplaintStatus.RESOLVED " +
            "AND c.createdAt >= :startDate " +
            "AND c.createdAt <= :endDate")
     long countResolvedComplaintsAgainstUser(

@@ -53,7 +53,7 @@ public class UserController {
             @Valid @RequestBody CreateUserRequest request,
             @AuthenticationPrincipal UserPrincipal currentUser) {
         UserResponse user = userService.createUser(request, currentUser);
-        return ResponseEntity.ok(ApiResponse.success("User created successfully", user));
+        return ResponseEntity.status(201).body(ApiResponse.success("User created successfully", user));
     }
 
     @PutMapping("/{id}")
@@ -73,7 +73,7 @@ public class UserController {
             @PathVariable Long id,
             @AuthenticationPrincipal UserPrincipal currentUser) {
         userService.deleteUser(id, currentUser);
-        return ResponseEntity.ok(ApiResponse.success("User deleted successfully", null));
+        return ResponseEntity.status(204).build();
     }
 
     @GetMapping("/store/{storeId}")
