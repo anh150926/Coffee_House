@@ -42,11 +42,3 @@ public class AuditLog {
     @Column(updatable = false)
     private LocalDateTime timestamp;
 }
-
-
-
-
-
-
-
-

@@ -1,0 +1,45 @@
+﻿mvn : WARNING: A terminally deprecated method in sun.misc.Unsafe has 
+been called
+At line:1 char:1
++ mvn compile --no-transfer-progress 2>&1 | Out-File -FilePath 
+"compile ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (WARNING: A term...has bee 
+   n called:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+WARNING: sun.misc.Unsafe::staticFieldBase has been called by 
+com.google.inject.internal.aop.HiddenClassDefiner (file:/C:/Users/NGUYE
+N%20LE%20ANH/apache-maven-3.9.11-bin/apache-maven-3.9.11/lib/guice-5.1.
+0-classes.jar)
+WARNING: Please consider reporting this to the maintainers of class 
+com.google.inject.internal.aop.HiddenClassDefiner
+WARNING: sun.misc.Unsafe::staticFieldBase will be removed in a future 
+release
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -----------------------< com.coffee:management >------------------------
+[INFO] Building Coffee Shop Staff Management 1.0.0
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ management ---
+[INFO] Copying 3 resources from src\main\resources to target\classes
+[INFO] Copying 11 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ management ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 142 source files with javac [debug parameters release 21] to target\classes
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  2.463 s
+[INFO] Finished at: 2026-03-18T00:38:56+07:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.13.0:compile (default-compile) on project management: Fatal error compiling: java.lang.ExceptionInInitializerError: com.sun.tools.javac.code.TypeTag :: UNKNOWN -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException
