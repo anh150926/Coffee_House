@@ -18,9 +18,9 @@
     <description>Part-time staff management system for coffee shop chain</description>
 
     <properties>
-        <java.version>21</java.version>
+        <java.version>24</java.version>
         <jjwt.version>0.12.6</jjwt.version>
-        <lombok.version>1.18.36</lombok.version>
+        <lombok.version>1.18.38</lombok.version>
     </properties>
 
     <dependencies>
