@@ -13,10 +13,12 @@ import com.coffee.management.exception.ResourceNotFoundException;
 import com.coffee.management.repository.StoreRepository;
 import com.coffee.management.repository.UserRepository;
 import com.coffee.management.security.UserPrincipal;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,47 +28,41 @@ import java.util.stream.Collectors;
  */
 @Service
 @Transactional
-public class UserService {
+@RequiredArgsConstructor
+public class UserService implements IUserService {
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private StoreRepository storeRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private AuditService auditService;
+    private final UserRepository userRepository;
+    private final StoreRepository storeRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final AuditService auditService;
 
     /**
      * Get all users (Owner: all, Manager: own store only)
      */
     @Transactional(readOnly = true)
-    public List<UserResponse> getAllUsers(UserPrincipal currentUser) {
-        List<User> users;
+    @Override
+    public Page<UserResponse> getAllUsers(UserPrincipal currentUser, Pageable pageable) {
+        Page<User> users;
         
         if (currentUser.getRole().equals("OWNER")) {
-            users = userRepository.findAll();
+            users = userRepository.findAll(pageable);
         } else if (currentUser.getRole().equals("MANAGER")) {
             if (currentUser.getStoreId() == null) {
                 throw new BadRequestException("Manager is not assigned to any store");
             }
-            users = userRepository.findByStoreId(currentUser.getStoreId());
+            users = userRepository.findByStoreId(currentUser.getStoreId(), pageable);
         } else {
             throw new ForbiddenException("You don't have permission to view users");
         }
 
-        return users.stream()
-                .map(UserResponse::fromEntity)
-                .collect(Collectors.toList());
+        return users.map(UserResponse::fromEntity);
     }
 
     /**
      * Get user by ID
      */
     @Transactional(readOnly = true)
+    @Override
     public UserResponse getUserById(Long id, UserPrincipal currentUser) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
@@ -88,6 +84,7 @@ public class UserService {
     /**
      * Create a new user
      */
+    @Override
     public UserResponse createUser(CreateUserRequest request, UserPrincipal currentUser) {
         // Validate unique constraints
         if (userRepository.existsByUsername(request.getUsername())) {
@@ -137,6 +134,7 @@ public class UserService {
     /**
      * Update an existing user
      */
+    @Override
     public UserResponse updateUser(Long id, UpdateUserRequest request, UserPrincipal currentUser) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
@@ -208,6 +206,7 @@ public class UserService {
     /**
      * Delete a user (soft delete by setting status to INACTIVE)
      */
+    @Override
     public void deleteUser(Long id, UserPrincipal currentUser) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
@@ -238,16 +237,17 @@ public class UserService {
      * Get users by store
      */
     @Transactional(readOnly = true)
-    public List<UserResponse> getUsersByStore(Long storeId) {
-        return userRepository.findByStoreId(storeId).stream()
-                .map(UserResponse::fromEntity)
-                .collect(Collectors.toList());
+    @Override
+    public Page<UserResponse> getUsersByStore(Long storeId, Pageable pageable) {
+        return userRepository.findByStoreId(storeId, pageable)
+                .map(UserResponse::fromEntity);
     }
 
     /**
      * Get staff count by store
      */
     @Transactional(readOnly = true)
+    @Override
     public long getStaffCountByStore(Long storeId) {
         return userRepository.countStaffByStore(storeId);
     }

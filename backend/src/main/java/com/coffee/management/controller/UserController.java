@@ -9,11 +9,18 @@ import com.coffee.management.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import com.coffee.management.service.IUserService;
 
 import java.util.List;
 
@@ -23,17 +30,21 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/users")
 @Tag(name = "Users", description = "User management endpoints")
+@RequiredArgsConstructor
 public class UserController {
 
-    @Autowired
-    private UserService userService;
+    private final IUserService userService;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('OWNER', 'MANAGER')")
-    @Operation(summary = "Get all users")
-    public ResponseEntity<ApiResponse<List<UserResponse>>> getAllUsers(
+    @Operation(summary = "Get all users with pagination")
+    public ResponseEntity<ApiResponse<Page<UserResponse>>> getAllUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "fullName") String sortBy,
             @AuthenticationPrincipal UserPrincipal currentUser) {
-        List<UserResponse> users = userService.getAllUsers(currentUser);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy));
+        Page<UserResponse> users = userService.getAllUsers(currentUser, pageable);
         return ResponseEntity.ok(ApiResponse.success(users));
     }
 
@@ -78,9 +89,14 @@ public class UserController {
 
     @GetMapping("/store/{storeId}")
     @PreAuthorize("hasAnyRole('OWNER', 'MANAGER')")
-    @Operation(summary = "Get users by store")
-    public ResponseEntity<ApiResponse<List<UserResponse>>> getUsersByStore(@PathVariable Long storeId) {
-        List<UserResponse> users = userService.getUsersByStore(storeId);
+    @Operation(summary = "Get users by store with pagination")
+    public ResponseEntity<ApiResponse<Page<UserResponse>>> getUsersByStore(
+            @PathVariable Long storeId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "fullName") String sortBy) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy));
+        Page<UserResponse> users = userService.getUsersByStore(storeId, pageable);
         return ResponseEntity.ok(ApiResponse.success(users));
     }
 }

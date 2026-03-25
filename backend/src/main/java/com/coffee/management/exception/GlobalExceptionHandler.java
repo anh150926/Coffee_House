@@ -100,7 +100,7 @@ public class GlobalExceptionHandler {
         logger.error("Unexpected internal error: ", ex);
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error("Hệ thống gặp sự cố, vui lòng thử lại sau."));
+                .body(ApiResponse.error("Hệ thống gặp sự cố, vui lòng thử lại sau.", "INTERNAL_SERVER_ERROR"));
     }
 }
 

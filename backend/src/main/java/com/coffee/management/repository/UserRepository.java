@@ -27,6 +27,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     List<User> findByStoreId(Long storeId);
 
+    org.springframework.data.domain.Page<User> findByStoreId(Long storeId, org.springframework.data.domain.Pageable pageable);
+
     List<User> findByStoreIdAndRole(Long storeId, Role role);
 
     List<User> findByStatus(UserStatus status);
