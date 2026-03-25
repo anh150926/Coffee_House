@@ -26,7 +26,10 @@ export interface UpdateUserRequest {
 const userService = {
   getAll: async (): Promise<ApiResponse<User[]>> => {
     const response = await api.get<ApiResponse<any>>('/users');
-    return response.data.content ? response.data.content : response.data;
+    if (response.data && response.data.data && Array.isArray(response.data.data.content)) {
+      return { ...response.data, data: response.data.data.content };
+    }
+    return response.data;
   },
 
   getById: async (id: number): Promise<ApiResponse<User>> => {
@@ -51,7 +54,10 @@ const userService = {
 
   getByStore: async (storeId: number): Promise<ApiResponse<User[]>> => {
     const response = await api.get<ApiResponse<any>>(`/users/store/${storeId}`);
-    return response.data.content ? response.data.content : response.data;
+    if (response.data && response.data.data && Array.isArray(response.data.data.content)) {
+      return { ...response.data, data: response.data.data.content };
+    }
+    return response.data;
   },
 };
 
