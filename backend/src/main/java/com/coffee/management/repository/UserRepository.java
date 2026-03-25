@@ -1,5 +1,6 @@
 package com.coffee.management.repository;
 
+import com.coffee.management.dto.user.UserSummary;
 import com.coffee.management.entity.Role;
 import com.coffee.management.entity.User;
 import com.coffee.management.entity.UserStatus;
@@ -52,4 +53,31 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("SELECT u FROM User u WHERE u.store.id = :storeId AND u.role = com.coffee.management.entity.Role.STAFF AND u.status = com.coffee.management.entity.UserStatus.ACTIVE")
     List<User> findActiveStaffByStoreId(@Param("storeId") Long storeId);
+
+    // ────────────────────────────────────────────────
+    // DTO Projection — chỉ select các cột cần thiết (tránh fetch avatarUrl LONGTEXT)
+    // ────────────────────────────────────────────────
+    @Query("SELECT u.id as id, u.username as username, u.fullName as fullName, "
+        + "u.email as email, u.phone as phone, "
+        + "u.role as role, u.status as status, "
+        + "u.store.name as storeName, u.needPasswordChange as needPasswordChange "
+        + "FROM User u LEFT JOIN u.store "
+        + "WHERE u.store.id = :storeId AND u.deleted = false")
+    List<UserSummary> findUserSummariesByStore(@Param("storeId") Long storeId);
+
+    @Query("SELECT u.id as id, u.username as username, u.fullName as fullName, "
+        + "u.email as email, u.phone as phone, "
+        + "u.role as role, u.status as status, "
+        + "u.store.name as storeName, u.needPasswordChange as needPasswordChange "
+        + "FROM User u LEFT JOIN u.store "
+        + "WHERE u.deleted = false")
+    List<UserSummary> findAllUserSummaries();
+
+    // ────────────────────────────────────────────────
+    // JOIN FETCH — tránh N+1 khi cần object đầy đủ (dùng trong payroll, ranking)
+    // ────────────────────────────────────────────────
+    @Query("SELECT DISTINCT u FROM User u LEFT JOIN FETCH u.store "
+        + "WHERE u.store.id = :storeId AND u.status = com.coffee.management.entity.UserStatus.ACTIVE "
+        + "AND u.deleted = false")
+    List<User> findActiveStaffWithStoreByStoreId(@Param("storeId") Long storeId);
 }

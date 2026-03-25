@@ -9,10 +9,15 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * Entity representing a user in the system (Owner, Manager, or Staff)
+ * Entity representing a user in the system (Owner, Manager, or Staff).
+ * Includes audit fields, soft delete, optimistic locking and password change tracking.
  */
 @Entity
-@Table(name = "users")
+@Table(name = "users", indexes = {
+    @Index(name = "idx_users_store_status", columnList = "store_id, status"),
+    @Index(name = "idx_users_username", columnList = "username"),
+    @Index(name = "idx_users_not_deleted", columnList = "is_deleted")
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -59,6 +64,33 @@ public class User {
     @Column(name = "avatar_url", columnDefinition = "LONGTEXT")
     private String avatarUrl;
 
+    // ────────────────────────────────────────────────
+    // Bảo mật: yêu cầu đổi mật khẩu lần đầu đăng nhập
+    // ────────────────────────────────────────────────
+    @Column(name = "need_password_change", nullable = false)
+    @Builder.Default
+    private Boolean needPasswordChange = true;  // true = nhân viên mới phải đổi mật khẩu
+
+    // ────────────────────────────────────────────────
+    // Soft Delete: không xóa cứng, chỉ đánh dấu đã xóa
+    // ────────────────────────────────────────────────
+    @Column(name = "is_deleted", nullable = false)
+    @Builder.Default
+    private Boolean deleted = false;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    // ────────────────────────────────────────────────
+    // Optimistic Locking: chống ghi đè đồng thời
+    // ────────────────────────────────────────────────
+    @Version
+    @Column(name = "version")
+    private Integer version;
+
+    // ────────────────────────────────────────────────
+    // Audit columns
+    // ────────────────────────────────────────────────
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

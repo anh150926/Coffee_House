@@ -43,6 +43,7 @@ public class UserService {
     /**
      * Get all users (Owner: all, Manager: own store only)
      */
+    @Transactional(readOnly = true)
     public List<UserResponse> getAllUsers(UserPrincipal currentUser) {
         List<User> users;
         
@@ -65,6 +66,7 @@ public class UserService {
     /**
      * Get user by ID
      */
+    @Transactional(readOnly = true)
     public UserResponse getUserById(Long id, UserPrincipal currentUser) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
@@ -115,6 +117,7 @@ public class UserService {
                 .role(request.getRole())
                 .hourlyRate(request.getHourlyRate())
                 .status(UserStatus.ACTIVE)
+                .needPasswordChange(true)   // Nhân viên mới phải đổi mật khẩu lần đầu
                 .build();
 
         if (request.getStoreId() != null) {
@@ -234,6 +237,7 @@ public class UserService {
     /**
      * Get users by store
      */
+    @Transactional(readOnly = true)
     public List<UserResponse> getUsersByStore(Long storeId) {
         return userRepository.findByStoreId(storeId).stream()
                 .map(UserResponse::fromEntity)
@@ -243,6 +247,7 @@ public class UserService {
     /**
      * Get staff count by store
      */
+    @Transactional(readOnly = true)
     public long getStaffCountByStore(Long storeId) {
         return userRepository.countStaffByStore(storeId);
     }
