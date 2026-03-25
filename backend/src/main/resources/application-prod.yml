@@ -8,8 +8,15 @@ spring:
     password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
-      connection-timeout: 60000
-      maximum-pool-size: 10
+      # Tối ưu cho TiDB Cloud Serverless (cold start friendly)
+      connection-timeout: 30000        # Giảm từ 60s → 30s, fail fast hơn
+      maximum-pool-size: 15            # Tăng từ 10 → 15 (đủ cho 100 users)
+      minimum-idle: 3                  # Giữ sẵn 3 kết nối, không đóng hết khi rảnh
+      idle-timeout: 300000             # Đóng kết nối rảnh sau 5 phút
+      max-lifetime: 1800000            # Max 30 phút / kết nối (tránh TiDB server reset)
+      validation-timeout: 5000
+      leak-detection-threshold: 60000  # Cảnh báo nếu connection giữ > 60s (rò rỉ)
+      connection-test-query: SELECT 1   # Keepalive query tương thích TiDB
 
   jpa:
     hibernate:
@@ -20,30 +27,36 @@ spring:
     show-sql: false
 
   flyway:
-    enabled: true
-    baseline-on-migrate: true
+    enabled: false                      # Tắt Flyway — Hibernate ddl-auto đã quản lý schema
+    baseline-on-migrate: false
 
 server:
   port: ${PORT:8080}
 
-# Khớp với @Value("${jwt.secret}"), @Value("${jwt.access-token-expiration}"), @Value("${jwt.refresh-token-expiration}")
+# JWT configuration
 jwt:
   secret: ${JWT_SECRET}
-  access-token-expiration: 86400000
-  refresh-token-expiration: 604800000
+  access-token-expiration: 3600000    # 1 giờ (giảm từ 24h → 1h để tăng bảo mật)
+  refresh-token-expiration: 604800000 # 7 ngày (giữ nguyên)
 
-# Khớp với @Value("${cors.allowed-origins}") trong CorsConfig.java
+# CORS configuration
 cors:
   allowed-origins: ${CORS_ALLOWED_ORIGINS}
 
+# Logging — chỉ ghi những gì cần thiết, không leak SQL/data
 logging:
   level:
     com.coffee.management: INFO
     org.springframework.security: WARN
+    org.hibernate.SQL: WARN             # Không log SQL queries lên production
+    org.hibernate.type: WARN            # Không log tham số SQL
+    com.zaxxer.hikari: INFO             # Log trạng thái connection pool
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 
+# OpenAPI/Swagger — TẮT hoàn toàn trên production
 springdoc:
   api-docs:
-    path: /api-docs
+    enabled: false        # Ẩn /api-docs và /v3/api-docs
   swagger-ui:
-    path: /swagger-ui.html
-    operationsSorter: method
+    enabled: false        # Ẩn /swagger-ui.html

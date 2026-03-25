@@ -96,10 +96,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<?>> handleGenericException(Exception ex) {
-        logger.error("Unexpected error: ", ex);
+        // Log full details to server (Render logs) but NEVER expose to client
+        logger.error("Unexpected internal error: ", ex);
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error("An unexpected error occurred: " + ex.getMessage()));
+                .body(ApiResponse.error("Hệ thống gặp sự cố, vui lòng thử lại sau."));
     }
 }
 

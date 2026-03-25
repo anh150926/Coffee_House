@@ -9,6 +9,7 @@ import com.coffee.management.exception.BadRequestException;
 import com.coffee.management.exception.UnauthorizedException;
 import com.coffee.management.repository.UserRepository;
 import com.coffee.management.security.JwtTokenProvider;
+import com.coffee.management.security.TokenBlacklistService;
 import com.coffee.management.security.UserPrincipal;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -16,9 +17,10 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 /**
- * Service for authentication operations
+ * Service for authentication operations (login, logout, token refresh)
  */
 @Service
 public class AuthService {
@@ -31,6 +33,9 @@ public class AuthService {
 
     @Autowired
     private JwtTokenProvider tokenProvider;
+
+    @Autowired
+    private TokenBlacklistService tokenBlacklistService;
 
     /**
      * Authenticate user and generate tokens
@@ -62,6 +67,17 @@ public class AuthService {
     }
 
     /**
+     * Logout: blacklist the current access token so it cannot be reused
+     */
+    public void logout(String authorizationHeader) {
+        if (StringUtils.hasText(authorizationHeader)
+                && authorizationHeader.startsWith("Bearer ")) {
+            String token = authorizationHeader.substring(7);
+            tokenBlacklistService.blacklist(token);
+        }
+    }
+
+    /**
      * Refresh access token using refresh token
      */
     public LoginResponse refreshToken(RefreshTokenRequest request) {
@@ -90,7 +106,7 @@ public class AuthService {
     }
 
     /**
-     * Get current authenticated user
+     * Get current authenticated user principal
      */
     public UserPrincipal getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -101,7 +117,7 @@ public class AuthService {
     }
 
     /**
-     * Get current user entity
+     * Get current user entity from DB
      */
     public User getCurrentUserEntity() {
         UserPrincipal principal = getCurrentUser();
@@ -109,11 +125,3 @@ public class AuthService {
                 .orElseThrow(() -> new UnauthorizedException("User not found"));
     }
 }
-
-
-
-
-
-
-
-

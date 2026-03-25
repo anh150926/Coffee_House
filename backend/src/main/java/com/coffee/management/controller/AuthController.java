@@ -39,11 +39,11 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    @Operation(summary = "Logout current user")
-    public ResponseEntity<ApiResponse<Void>> logout() {
-        // For JWT, logout is handled client-side by deleting tokens
-        // Server-side blacklisting can be implemented if needed
-        return ResponseEntity.ok(ApiResponse.success("Logout successful", null));
+    @Operation(summary = "Logout current user — blacklists token server-side")
+    public ResponseEntity<ApiResponse<Void>> logout(
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        authService.logout(authHeader);
+        return ResponseEntity.ok(ApiResponse.success("Đăng xuất thành công", null));
     }
 
     @GetMapping("/me")

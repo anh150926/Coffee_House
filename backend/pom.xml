@@ -50,6 +50,13 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- Caffeine Cache — for rate limiting & token blacklist -->
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+        </dependency>
+
+
         <!-- Flyway Migration -->
         <dependency>
             <groupId>org.flywaydb</groupId>
