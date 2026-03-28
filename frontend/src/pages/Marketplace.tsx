@@ -68,7 +68,8 @@ const Marketplace: React.FC<MarketplaceProps> = ({ hideHeader = false }) => {
 
   useEffect(() => {
     if (stores.length > 0 && !selectedStoreId) {
-      const defaultStore = user?.storeId || stores[0].id;
+      // Owner không có storeId → dùng store đầu tiên
+      const defaultStore = (user?.storeId && user.storeId > 0) ? user.storeId : stores[0].id;
       setSelectedStoreId(defaultStore);
     }
   }, [stores, user?.storeId, selectedStoreId]);
@@ -121,11 +122,12 @@ const Marketplace: React.FC<MarketplaceProps> = ({ hideHeader = false }) => {
     }
   };
 
-  const handleReviewListing = async (approve: boolean) => {
-    if (!selectedListing) return;
+  const handleReviewListing = async (approve: boolean, listingOverride?: MarketplaceListing) => {
+    const targetListing = listingOverride || selectedListing;
+    if (!targetListing) return;
     try {
       await dispatch(reviewListing({
-        listingId: selectedListing.id,
+        listingId: targetListing.id,
         data: { status: approve ? 'APPROVED' : 'REJECTED', note: reviewNote },
       })).unwrap();
       setToast({ show: true, message: approve ? 'Đã duyệt!' : 'Đã từ chối!', type: 'success' });
@@ -582,10 +584,7 @@ const Marketplace: React.FC<MarketplaceProps> = ({ hideHeader = false }) => {
                             </button>
                             <button 
                               className="btn btn-outline-danger btn-sm flex-fill"
-                              onClick={() => {
-                                setSelectedListing(listing);
-                                handleReviewListing(false);
-                              }}
+                              onClick={() => handleReviewListing(false, listing)}
                             >
                               <i className="bi bi-x me-1"></i>
                               Từ chối

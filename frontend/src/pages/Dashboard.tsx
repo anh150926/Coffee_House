@@ -61,10 +61,19 @@ const Dashboard: React.FC = () => {
         dispatch(fetchAvailableListings(user.storeId));
       }
     }
-    if ((user?.role === 'MANAGER' || user?.role === 'OWNER') && user?.storeId) {
+    if (user?.role === 'MANAGER' && user?.storeId) {
       dispatch(fetchPendingApproval(user.storeId));
     }
   }, [dispatch, user?.role, user?.storeId]);
+
+  // Owner không có storeId → fetch marketplace data sau khi stores đã load
+  useEffect(() => {
+    if (user?.role === 'OWNER' && stores.length > 0) {
+      const firstStoreId = stores[0].id;
+      dispatch(fetchAvailableListings(firstStoreId));
+      dispatch(fetchPendingApproval(firstStoreId));
+    }
+  }, [dispatch, user?.role, stores]);
 
   const loadCurrentCheckIn = async () => {
     try {

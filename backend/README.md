@@ -2,6 +2,21 @@
 
 Dự án Backend đóng vai trò là lõi hệ thống xử lý nghiệp vụ, quản lý dữ liệu đa luồng (Database Management), cung cấp chuẩn giao tiếp RESTful API cho các client Frontend cũng như xử lý logic cốt lõi cho **20 tính năng quản lý nhân sự quán cà phê.**
 
+## Công Nghệ Sử Dụng
+
+| Công nghệ | Phiên bản | Mô tả |
+|-----------|-----------|-------|
+| Java | 21 (LTS) | Ngôn ngữ chính |
+| Spring Boot | 3.3.5 | Framework backend |
+| Spring Security 6 | Latest | Xác thực & phân quyền JWT |
+| Spring Data JPA | Latest | ORM layer |
+| Flyway | Latest | Database migration tự động |
+| Lombok | 1.18.38 | Giảm boilerplate code |
+| Swagger/OpenAPI | 3.x | API documentation tự sinh |
+| Docker | Multi-stage | Container hóa cho deployment |
+| MySQL 8 | Local | Development database |
+| TiDB Cloud | Serverless | Production database |
+
 ## Kiến Trúc 20 Tính Năng Định Tuyến Backend (API Architecture)
 
 Hệ thống được chia nhỏ thành các Service độc lập quản lý, tuân thủ nguyên lý thiết kế Model-View-Controller (tại API tầng Controller):
@@ -41,84 +56,139 @@ Hệ thống được chia nhỏ thành các Service độc lập quản lý, tu
 
 ---
 
-## Môi Trường Cài Đặt Khai Báo Chi Tiết Chạy Backend
+## Cấu Trúc Thư Mục
 
-Để chạy Java Spring Boot, lập trình viên cần thiết lập chuẩn Environment theo luồng sau đây để tránh lỗi phổ biến với Lombok.
-
-### Bước 1: Yêu Cầu Database (Tạo Lược Đồ, Flyway Tự Khởi Tạo Bảng)
-Khởi chạy dịch vụ MySQL của bạn (Ví dụ bằng XAMPP hoặc cài rời).
-Truy cập MySQL CLI bằng account Root:
-```bash
-mysql -u root -p
-# Mật khẩu rỗng hoặc số bạn đã set
 ```
-Sau đó tạo Database **(HÃY TẠO ĐÚNG TÊN DƯỚI ĐÂY)**:
+backend/
+├── src/main/java/com/coffee/management/
+│   ├── config/             # Spring Security, CORS, Swagger config
+│   ├── controller/         # REST Controllers (20 endpoints)
+│   │   ├── AuthController.java
+│   │   ├── MarketplaceController.java
+│   │   ├── ShiftController.java
+│   │   └── ...
+│   ├── dto/                # Data Transfer Objects
+│   │   ├── ApiResponse.java        # Standard response wrapper
+│   │   └── marketplace/            # Marketplace DTOs
+│   ├── entity/             # JPA Entities
+│   ├── exception/          # Custom exceptions + GlobalHandler
+│   ├── repository/         # Spring Data JPA Repositories
+│   ├── security/           # JWT + UserPrincipal
+│   └── service/            # Business logic layer
+├── src/main/resources/
+│   ├── application.yml             # Local config
+│   ├── application-prod.yml        # Production config (Render + TiDB)
+│   └── db/migration/              # Flyway SQL scripts
+├── Dockerfile                      # Multi-stage Docker build
+└── pom.xml                         # Maven dependencies
+```
+
+---
+
+## Hướng Dẫn Cài Đặt & Chạy
+
+### Chạy Local (Development)
+
+#### Bước 1: Tạo Database MySQL
 ```sql
 CREATE DATABASE coffee_management CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-### Bước 2: Thiết lập Application.yml (Nơi Cấu Hình Dòng Chảy)
-Mở cây thư mục: `src/main/resources/application.yml`. Trọng Tâm 2 cấu hình sau phải thay đổi:
-
-#### 2.1 Cấu Hình SQL Credentials MySQL
-Chỉnh `username` và `password` theo giá trị đúng của MySQL máy bạn. Spring mặc định đọc biến môi trường `$DB_USERNAME`, nếu không có sẽ lấy `root`.
+#### Bước 2: Cấu hình (`application.yml`)
 ```yaml
 spring:
   datasource:
     url: jdbc:mysql://localhost:3306/coffee_management?serverTimezone=Asia/Ho_Chi_Minh
-    username: ${DB_USERNAME:root}       # ĐỔI THÀNH USER CỦA BẠN (VD DỰ PHÒNG: root)
-    password: ${DB_PASSWORD:mypassword} # ĐỔI THÀNH PASS CỦA BẠN (VD DỰ PHÒNG: rỗng hoặc mypassword)
+    username: ${DB_USERNAME:root}       # Đổi thành user MySQL của bạn
+    password: ${DB_PASSWORD:123456}     # Đổi thành password MySQL của bạn
 ```
 
-#### 2.2 Cấu Hình Secret Bảo Mật JWT Khóa Mã Hóa
-Cần một cụm chuỗi bảo mật siêu dài (ít nhất 256 ký tự Base64) để chống tấn công Token. (Không cần đổi trừ khi Deploy lễn môi trường Prod thật).
-```yaml
-jwt:
-  secret: ${JWT_SECRET:mySecretKeyForJWTTokenGenerationThatIsAtLeast256BitsLong1234567890abcdef}
-  expiration: 86400000 # 24 tiếng hết hạn
-```
-
-### Bước 3: Sửa Lỗi Tương Thích Lombok Khi Biên Dịch (VSCode / PowerShell)
-
-**💡Lưu Ý Cực Kỳ Quan Trọng:** Code được cấu hình bắt buộc xài **JDK 21**. Nếu máy tính của bạn cài cả Java 24 thì Lombok Annotation (`@Data`, `@Getter`) sẽ bị báo lỗi "Unknown type" dẫn đến Build fail.
-
-Trỏ Java_Home trực tiếp vào JDK 21 trước khi build bằng Terminal / PowerShell:
+#### Bước 3: Đặt JDK 21 (Bắt buộc)
 ```powershell
-$env:JAVA_HOME = "C:\Program Files\Java\jdk-21"  # Thay đường dẫn thực tế của JDK 21
+$env:JAVA_HOME = "C:\Program Files\Java\jdk-21"
 ```
 
-*(Nếu xài VSCode, đổi file `frontend/.vscode/settings.json` bằng đoạn dưới)*:
-```json
-{
-  "java.jdt.ls.java.home": "C:\\Program Files\\Java\\jdk-21"
-}
-```
+> **⚠️ Lưu Ý:** Code bắt buộc dùng **JDK 21**. Nếu máy cài JDK 24, Lombok sẽ báo lỗi `ExceptionInInitializerError TypeTag UNKNOWN`.
 
-### Bước 4: Launching / Chạy Server
-Tại thư mục gốc dự án Backend `cd backend`.
-
-Phục vụ Tải Thư Viện dependencies:
+#### Bước 4: Build & Chạy
 ```bash
+cd backend
 mvn clean install -DskipTests
-```
-
-Chạy Live Application (Server Tomcat nhúng):
-```bash
 mvn spring-boot:run
 ```
 
-Chờ 15s. Bạn sẽ thấy Flyway SQL Script (`V1...` / `V2...`) tự động đẩy 30 Tables kèm tài khoản mẫu khởi tạo lên DB `coffee_management`. Server Online tại cổng **`8080`**.
+✅ Server Online tại: `http://localhost:8080`
+Swagger UI: `http://localhost:8080/swagger-ui.html`
+
+Flyway sẽ tự động tạo tables và seed 30 tài khoản demo khi chạy lần đầu.
 
 ---
 
-## 📚 API System Flow (Tài Liệu REST API Dành Sinh Viên/Tester)
+### Triển Khai Production (Render + TiDB)
 
-Truy cập trang Swagger Auto-Generated thông minh và dùng nút **Try It Out** để gọi thư trực tiếp:
-👉 **[http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)**
+Backend đã được cấu hình sẵn với **Dockerfile** multi-stage và **application-prod.yml** để chạy trên cloud.
 
-### Quy Trình Kích Hoạt Quyền Postman/Swagger
-1. Chọn Controller `AuthController` ➜ Gọi hàm `POST /api/v1/auth/login`.
-2. Truyền Body (VD mẫu Manager): `{"username":"managerA", "password":"password123"}`
-3. Copy đoạn String **AccessToken** màu cam.
-4. Trên đỉnh Web Swagger bấm nút **Authorize (Hình ổ khóa)**, dán mã `Bearer [Khoảng Cách] [Cụm AccessToken]`.
-5. Sau đó tất cả các Endpoint như chức năng "Chấm Công", "Lương"... đều hoạt động thông suốt với vai trò của Manager!
+#### Database: TiDB Cloud Serverless
+1. Tạo cluster tại [tidbcloud.com](https://tidbcloud.com) (miễn phí)
+2. TiDB tương thích MySQL protocol — không cần thay đổi code
+3. Lưu ý: Schema được quản lý bởi `hibernate.ddl-auto: update` (Flyway tắt trên prod)
+
+#### Backend: Render (Docker)
+1. Tạo **Web Service** trên [render.com](https://render.com)
+2. Kết nối Git repository, đặt **Root Directory**: `backend`
+3. Chọn **Docker** runtime
+4. Thiết lập **Environment Variables**:
+
+| Biến | Giá trị | Mô tả |
+|------|---------|-------|
+| `SPRING_DATASOURCE_URL` | `jdbc:mysql://<host>:4000/<db>?useSSL=true&sslMode=VERIFY_IDENTITY` | TiDB connection string |
+| `SPRING_DATASOURCE_USERNAME` | `<tidb-user>` | TiDB username |
+| `SPRING_DATASOURCE_PASSWORD` | `<tidb-password>` | TiDB password |
+| `JWT_SECRET` | `<random-256bit-key>` | JWT signing key |
+| `CORS_ALLOWED_ORIGINS` | `https://<vercel-domain>` | Frontend URL |
+
+5. Render tự động build Docker image từ `Dockerfile` và deploy
+
+#### Dockerfile (Multi-stage Build)
+```dockerfile
+# Stage 1: Build
+FROM maven:3.9.6-eclipse-temurin-21-alpine AS build
+WORKDIR /app
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
+COPY src ./src
+RUN mvn clean package -DskipTests
+
+# Stage 2: Run
+FROM eclipse-temurin:21-jre
+WORKDIR /app
+COPY --from=build /app/target/management-1.0.0.jar app.jar
+EXPOSE 8080
+ENTRYPOINT ["java", "-Dspring.profiles.active=prod", "-jar", "app.jar"]
+```
+
+#### Đặc điểm Production Config (`application-prod.yml`)
+- **HikariCP** tối ưu cho TiDB cold start (connection-timeout: 30s, pool: 15)
+- **JWT** hạn 1 giờ (tăng bảo mật so với local 24h)
+- **Swagger/OpenAPI** TẮT hoàn toàn trên production
+- **Logging** chỉ ghi INFO, không leak SQL/data
+
+#### Lưu ý quan trọng
+- Render free tier có **cold start** ~30-60 giây cho request đầu tiên
+- TiDB Serverless cũng có cold start tương tự — HikariCP đã được cấu hình keepalive
+- Leak detection threshold: 60s (cảnh báo connection leak)
+
+---
+
+## 📚 API Documentation
+
+### Local Development
+Truy cập Swagger UI: **[http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)**
+
+### Quy Trình Sử Dụng Swagger
+1. Gọi `POST /api/v1/auth/login` với body: `{"username":"managerA", "password":"password123"}`
+2. Copy `accessToken` từ response
+3. Bấm nút **Authorize** (hình ổ khóa) → dán `Bearer <accessToken>`
+4. Tất cả endpoints đều hoạt động với quyền của tài khoản đã đăng nhập
+
+> **Lưu ý:** Swagger bị TẮT trên production để bảo mật. Chỉ sử dụng được trên local development.

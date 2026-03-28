@@ -2,12 +2,22 @@
 
 Nền tảng Frontend ReactJS của hệ thống **Coffee House Management System** cung cấp trải nghiệm Single Page Application (SPA) mượt mà không tải lại trang. Kiến trúc được phối hợp bằng **20 cụm chức năng UI** hiện đại để tối ưu hóa năng suất hoạt động của 3 cấp: Chủ quán (Owner) - Quản lý (Manager) - Nhân viên ca (Staff).
 
+## Công Nghệ Sử Dụng
+
+| Công nghệ | Phiên bản | Mô tả |
+|-----------|-----------|-------|
+| React | 18.x | Thư viện UI component-based |
+| TypeScript | 5.x | Type-safe JavaScript |
+| Redux Toolkit | Latest | Quản lý state tập trung |
+| React Router | 6.x | Điều hướng SPA |
+| Bootstrap 5 | 5.x | CSS Framework responsive |
+| Recharts | Latest | Biểu đồ thống kê |
+| Axios | Latest | HTTP Client gọi API |
+
 ## Kiến Trúc UI/UX Phục Vụ 20 Chức Năng Cốt Lõi
 
-Khác với các App quản trị thông thường, giao diện hệ thống này được xây dựng trên sự phân rã của các `Components` và `Redux Slices` theo các chức năng cụ thể:
-
 ### 1. Phân Hệ Đăng Nhập & Bảo Mật (`src/features/auth`)
-1. **Split-Screen LoginUI:** Trang chủ đăng nhập được thiết kế rẽ đôi giao diện (50/50). Ảnh thương hiệu nổi bật 1 bên, Form Login 1 bên. Các Test Account được đính kèm sắn để BẤM TỰ ĐIỀN chữ tiết kiệm thời gian gõ phím.
+1. **Split-Screen LoginUI:** Trang chủ đăng nhập được thiết kế rẽ đôi giao diện (50/50). Ảnh thương hiệu nổi bật 1 bên, Form Login 1 bên. Các Test Account được đính kèm sẵn để BẤM TỰ ĐIỀN chữ tiết kiệm thời gian gõ phím.
 2. **Quên & Đặt Lại Mật Khẩu (Password Portal):** Chuỗi Modal Dialog (Popup) chuyên nghiệp để gửi thư yêu cầu khôi phục, đảm bảo an toàn thao tác nhầm.
 3. **Cá Nhân Hóa Hồ Sơ (Profile Layout):** Một không gian làm việc Card-based bằng kính (Glassmorphism), nổi bật các chỉ số cá nhân như tổng giờ làm, chức vụ, nút tự đổi password tiện lợi.
 
@@ -40,43 +50,76 @@ Khác với các App quản trị thông thường, giao diện hệ thống nà
 
 ---
 
-## Môi Trường Cài Đặt Khai Báo Frontend (Dành Cho React Developer / System Admin)
+## Cấu Trúc Thư Mục
 
-Để có thể Compile và chạy Server giả lập (Development Server) thành công ngay từ phút đầu, hãy tuân thủ Checklist sau:
-
-### Yêu Cầu Môi Trường (System Specs)
-- **Node.js**: Phải cài bản số chẵn LTS từ phiên bản `18.x` hoặc `20.x` (Tránh dùng bản Beta Lẻ gây lỗi Node-Sass hay babel).
-- **Trình biên dịch quản lý gói**: `npm` (Mặc định đi với Node) hoặc `yarn`.
-- IDE đề xuất: Visual Studio Code.
-
-### Bước 1: Khởi Tạo File Biến Hệ Thống (`.env`)
-Từ Terminal/CMD ở gốc dự án, hãy truy cập thư mục Frontend:
-```bash
-cd parrtime-staff-management/frontend
 ```
-**Tạo File .env Động**: Spring Boot chạy API tĩnh trên port `8080/api/v1`. Bạn BẮT BUỘC tạo một tập tin tên là `.env` (chú ý có dấu chấm trước e) ở NGAY NGOÀI GỐC FOLDER `frontend`.
-Thêm dòng code sau:
-```env
-# ĐÂY LÀ URL ĐẾN BỘ NÃO BACKEND
-REACT_APP_API_URL=http://localhost:8080/api/v1
+frontend/
+├── public/                 # Static assets (favicon, index.html)
+├── src/
+│   ├── api/                # API service layer (axios, endpoints)
+│   │   ├── axios.ts        # Axios instance + interceptors
+│   │   ├── authService.ts  # Auth API endpoints
+│   │   ├── shiftService.ts # Shift API endpoints
+│   │   ├── marketplaceService.ts  # Chợ Ca API endpoints
+│   │   └── ...
+│   ├── app/
+│   │   └── store.ts        # Redux store configuration
+│   ├── components/         # Shared components (Layout, Loading, Toast)
+│   ├── features/           # Redux slices theo tính năng
+│   │   ├── auth/           # Auth slice + Login page
+│   │   ├── shifts/         # Shift management slice
+│   │   ├── marketplace/    # Chợ Ca slice
+│   │   ├── payroll/        # Payroll slice
+│   │   └── ...
+│   ├── pages/              # Page components
+│   ├── utils/              # Utility functions (formatters)
+│   └── App.tsx             # Root component + Routes
+├── .env                    # Local environment config
+├── .env.production         # Production environment config
+├── vercel.json             # Vercel SPA rewrite rules
+└── package.json
 ```
-> *(Mẹo PowerShell để tự tạo file nhanh: `echo "REACT_APP_API_URL=http://localhost:8080/api/v1" > .env`)*
 
-### Bước 2: Kéo Mã Nguồn Thư Viện Về Kho (Dependencies Install)
-Khi chạy lệnh này, trình quản lý đọc nội dung file `package.json` và kéo khoảng vài trăm MB thư viện vào thư mục ẩn `node_modules`. Do dự án dùng nhiều biểu đồ (`recharts`) và Axios nên hãy chờ xíu.
+---
+
+## Hướng Dẫn Cài Đặt & Chạy
+
+### Chạy Local (Development)
+
 ```bash
+cd frontend
+
+# 1. Tạo file .env
+echo "REACT_APP_API_URL=http://localhost:8080/api/v1" > .env
+
+# 2. Cài đặt dependencies
 npm install
-```
-*(Nếu cài đặt báo lỗi audit hoặc peer dependency vàng báo warning chéo, có thể ép lệnh bằng `npm install --legacy-peer-deps` để giải quyết)*.
 
-### Bước 3: Launch Live Browser Server
-Gõ lệnh để dịch JSX thành HTML/JS mộc và đẩy nó lên Localhost:
-```bash
+# 3. Khởi chạy dev server
 npm start
 ```
 
-### ✨ Quan Sát Thành Công
-Cửa sổ web mặc định hoặc mở tay Browser và điền: **`http://localhost:3000`**.
-Nếu giao diện hiện màn hình XANH Trắng với hình ảnh Cà Phê chia đôi (Split Screen), cùng Form Đăng Nhập bên phải, chúc mừng bạn hệ thống UI đã hòa nhịp với Backend!
+Browser mở tại: **http://localhost:3000**
 
-> Mẹo: Cứ mạnh dạn click vào các hàng Demo Account nhỏ trên form để hệ thống "Gõ Hộ" Username và Password vào các thẻ Input, bấm Enter để vút ngay vào Dashboard quản trị.
+### Triển Khai Production (Vercel)
+
+Frontend đã được cấu hình sẵn để deploy lên **Vercel**:
+
+1. **Import repository** vào Vercel Dashboard
+2. **Thiết lập**:
+   - Root Directory: `frontend`
+   - Framework Preset: `Create React App`
+   - Build Command: `npm run build`
+   - Output Directory: `build`
+3. **Environment Variables**:
+   ```
+   REACT_APP_API_URL=https://<your-backend>.onrender.com/api/v1
+   ```
+4. File `vercel.json` đã cấu hình SPA rewrite (`"rewrites": [{"source": "/(.*)", "destination": "/"}]`) để React Router hoạt động đúng.
+5. Vercel sẽ **tự động deploy** mỗi khi push code lên branch chính.
+
+### Lưu ý
+- File `.env.production` chứa URL template cho production. Trên Vercel, biến môi trường được thiết lập trong Dashboard sẽ ghi đè file này.
+- Đảm bảo `REACT_APP_API_URL` trỏ đúng tới backend đang chạy (cả local lẫn production).
+
+> Mẹo: Cứ mạnh dạn click vào các hàng Demo Account nhỏ trên form login để hệ thống "Gõ Hộ" Username và Password, bấm Enter để vào Dashboard ngay!
